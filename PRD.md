@@ -1,0 +1,103 @@
+# Product Requirements Document: AI Language Tutor Voice Agent
+
+### 1. Introduction and Vision 🗣️
+
+This document outlines the product requirements for an AI-powered Language Tutor, a Next.js web application designed to teach a new language (Language A) to a user who is fluent in another (Language B). The core of the experience is a voice-driven conversation where the AI agent, speaking primarily in Language B, guides the user through structured lessons to learn Language A. The platform will leverage the advanced speech-to-text (STT) and text-to-speech (TTS) capabilities of the ElevenLabs API to create a natural and interactive learning environment.
+
+**The vision** is to create a personalized, accessible, and engaging language learning tool that feels less like a traditional app and more like conversing with a patient, knowledgeable tutor.
+
+---
+
+### 2. Goals and Objectives 🎯
+
+* **Primary Goal:** To effectively teach a user the fundamentals of a new language (Language A) through interactive voice conversations.
+* **Secondary Goal:** To provide a backend system that allows for easy creation, management, and editing of lesson plans, making the platform scalable and adaptable.
+* **User Experience Goal:** To deliver a low-latency, seamless, and natural-sounding conversational experience that keeps users engaged.
+* **Technical Goal:** To build a robust and scalable full-stack application using Next.js and the ElevenLabs Agents Platform.
+
+---
+
+### 3. Target Audience 👥
+
+The primary target audience is individuals who are native speakers of one language (e.g., Hindi) and wish to learn another (e.g., English) from a beginner level. They are likely looking for a more practical, conversation-based learning method over traditional textbook or app-based approaches.
+
+---
+
+### 4. Product Features & Functionality
+
+#### **Core Voice Interaction & Learning Experience**
+
+* **Bilingual Conversation:** The agent will primarily communicate in the user's native language (Language B) to explain concepts, give instructions, and provide feedback. It will introduce words and phrases from the target language (Language A) as part of the lesson.
+* **Speech-to-Text (STT):** The system will use ElevenLabs' ASR model to accurately transcribe the user's spoken responses in both Language A and Language B.
+* **Text-to-Speech (TTS):** All agent dialogue will be generated using ElevenLabs' high-quality, low-latency TTS, offering a wide variety of voices to keep the experience engaging.
+* **Pronunciation Feedback (Future Scope):** While initial implementation will focus on comprehension, a future version could leverage STT analysis to provide basic feedback on the user's pronunciation of Language A.
+* **Lesson Progression:** The agent will guide the user through a pre-defined sequence of lessons, tracking their progress and adapting to their pace.
+
+#### **Lesson Management System**
+
+* **Dynamic Lesson Structure:** Lessons should not be hard-coded. They will be stored in a database and fetched by the backend.
+* **Editable Content:** A simple admin interface or a CMS (Content Management System) should allow non-technical users to create, read, update, and delete lessons.
+* **Lesson Components:** Each lesson should be broken down into structured steps or "turns." For example:
+    * `step_id`: Unique identifier for the step.
+    * `lesson_id`: Which lesson this step belongs to.
+    * `agent_prompt_b`: The text the agent speaks in Language B (e.g., "Now, let's learn how to say 'hello' in English.").
+    * `target_phrase_a`: The word or phrase to be taught in Language A (e.g., "Hello").
+    * `expected_user_response`: The ideal response from the user (can be flexible).
+    * `success_feedback`: What the agent says if the user is correct (e.g., "That's right!").
+    * `failure_feedback`: What the agent says if the user is incorrect (e.g., "Not quite, let's try again. The word is 'Hello'.").
+    * `next_step_id`: The ID of the next step in the lesson.
+
+---
+
+### 5. System Architecture
+
+#### **Frontend (Client-Side)**
+
+* **Framework:** **Next.js** (React)
+* **UI:** A clean, minimalist interface focused on the voice interaction. It should include:
+    * A prominent "Push to Talk" button.
+    * Visual feedback to indicate when the agent is listening, processing, or speaking.
+    * A text transcript of the conversation for user reference.
+    * A simple display of the current lesson and user progress (e.g., "Lesson 1: Greetings").
+* **State Management:** Use React's Context API or a library like Zustand for managing application state (e.g., conversation history, loading status).
+* **ElevenLabs Integration:** The frontend will capture microphone input and send it to the backend. It will receive audio streams from the backend to play back the agent's responses.
+
+#### **Backend (Server-Side)**
+
+* **Framework:** **Next.js API Routes** or a standalone **Node.js** server (e.g., with Express).
+* **Database:** A relational database like **PostgreSQL** or a NoSQL database like **MongoDB** to store user data and lesson content.
+    * **Tables/Collections:**
+        * `Users`: To store user profiles and progress.
+        * `Lessons`: To store the overall lesson structure.
+        * `LessonSteps`: To store the individual conversational turns within each lesson.
+* **API Endpoints:**
+    * `POST /api/conversation`: The main endpoint to handle user speech. It receives the audio or transcribed text, processes the logic, and returns the agent's audio response.
+    * `GET /api/lessons`: To fetch the list of lessons for the user.
+    * `GET /api/lessons/:id`: To fetch the specific steps for a given lesson.
+* **ElevenLabs Agent Integration:**
+    * The backend will be the primary interface with the **ElevenLabs Agents Platform**.
+    * When the user speaks, the backend receives the transcribed text from the frontend or directly from the ElevenLabs STT service.
+    * It will fetch the current lesson step from the database.
+    * It will use this information to decide what the agent should say next.
+    * It will then call the ElevenLabs TTS API to generate the audio for the agent's response and stream it back to the frontend.
+
+---
+
+### 6. Technical Stack Summary 🛠️
+
+| Component           | Technology                               | Justification                                                                                                 |
+| ------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Frontend** | **Next.js (React)** | Provides a powerful, production-ready framework for building modern user interfaces.                          |
+| **Backend** | **Next.js API Routes / Node.js** | Simplifies the development process by allowing for a unified codebase for both frontend and backend.            |
+| **Database** | **PostgreSQL / MongoDB** | Flexible and scalable options for storing structured lesson content and user data.                            |
+| **Voice Services** | **ElevenLabs Agents Platform** | An all-in-one solution for high-quality STT, multi-lingual TTS, and conversational AI logic.                  |
+| **Deployment** | **Vercel / AWS / Google Cloud** | Modern cloud platforms that offer seamless deployment and scaling for Next.js applications.                   |
+
+---
+
+### 7. Success Metrics 📈
+
+* **User Engagement:** Daily Active Users (DAU) and session duration.
+* **Lesson Completion Rate:** Percentage of users who start a lesson and complete it.
+* **User Retention:** Percentage of users who return to the app after their first session.
+* **Technical Performance:** Low audio latency (time between user finishing speaking and agent responding).

@@ -33,3 +33,18 @@ npm run db:generate
 ```
 
 This will generate the necessary SQL migration files in the `drizzle/migrations` directory.
+
+## Deployment
+
+This application is configured for deployment on [Vercel](https://vercel.com/).
+
+### Environment Variables
+
+To deploy the application, you will need to set the following environment variables in your Vercel project settings:
+
+-   `DATABASE_URL`: The connection string for your PostgreSQL database.
+-   `ELEVENLABS_API_KEY`: Your API key for the ElevenLabs service.
+-   `NEXTAUTH_SECRET`: A secret key for NextAuth.js. You can generate one using `openssl rand -base64 32`.
+-   `NEXTAUTH_URL`: The canonical URL of your deployed application (e.g., `https://your-app-name.vercel.app`).
+
+After setting the environment variables, you can deploy the application by connecting your Git repository to Vercel.

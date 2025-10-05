@@ -28,10 +28,14 @@ The primary target audience is individuals who are native speakers of one langua
 #### **Core Voice Interaction & Learning Experience**
 
 * **Bilingual Conversation:** The agent will primarily communicate in the user's native language (Language B) to explain concepts, give instructions, and provide feedback. It will introduce words and phrases from the target language (Language A) as part of the lesson.
-* **Speech-to-Text (STT):** The system will use ElevenLabs' ASR model to accurately transcribe the user's spoken responses in both Language A and Language B.
-* **Text-to-Speech (TTS):** All agent dialogue will be generated using ElevenLabs' high-quality, low-latency TTS, offering a wide variety of voices to keep the experience engaging.
+  * **Language Selection:** Users must be able to select their conversation language (Language B - e.g., Hindi, Spanish, French) and their target learning language (Language A - e.g., English).
+  * **Mixed Language Input:** The system should handle user responses that mix both languages (e.g., a Hindi-speaking user responding mostly in Hindi with English phrases they're learning).
+  * **Configurable per User:** Each user can have their own language preference stored in their profile.
+* **Speech-to-Text (STT):** The system will use ElevenLabs' ASR model to accurately transcribe the user's spoken responses in both Language A and Language B. The STT must support multi-language detection to handle mixed-language responses.
+* **Text-to-Speech (TTS):** All agent dialogue will be generated using ElevenLabs' high-quality, low-latency TTS, offering a wide variety of voices to keep the experience engaging. The TTS should use appropriate language models based on the user's selected conversation language.
 * **Pronunciation Feedback (Future Scope):** While initial implementation will focus on comprehension, a future version could leverage STT analysis to provide basic feedback on the user's pronunciation of Language A.
 * **Lesson Progression:** The agent will guide the user through a pre-defined sequence of lessons, tracking their progress and adapting to their pace.
+* **Progress Management:** Users should have the ability to reset their progress across all lessons for testing and practice purposes.
 
 #### **Lesson Management System**
 
@@ -59,6 +63,8 @@ The primary target audience is individuals who are native speakers of one langua
     * Visual feedback to indicate when the agent is listening, processing, or speaking.
     * A text transcript of the conversation for user reference.
     * A simple display of the current lesson and user progress (e.g., "Lesson 1: Greetings").
+    * Language selection dropdown or settings (to choose conversation language and target learning language).
+    * A "Reset Progress" button to allow users to restart all lessons from the beginning.
 * **State Management:** Use React's Context API or a library like Zustand for managing application state (e.g., conversation history, loading status).
 * **ElevenLabs Integration:** The frontend will capture microphone input and send it to the backend. It will receive audio streams from the backend to play back the agent's responses.
 

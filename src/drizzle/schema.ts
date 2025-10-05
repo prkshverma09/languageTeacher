@@ -14,9 +14,10 @@ export const users = pgTable("users", {
   }),
   email: varchar("email", {
     length: 256
-  }).unique(),
-  // A simple way to track progress, maybe storing the last completed step_id
-  progress: integer("progress"),
+  }).unique().notNull(),
+  hashedPassword: text("hashed_password").notNull(),
+  // Storing the current step_id for the user
+  progress: integer("progress").default(1).notNull(),
 });
 
 // Lessons Table

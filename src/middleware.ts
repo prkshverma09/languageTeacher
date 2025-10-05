@@ -1,8 +1,8 @@
 export { default } from "next-auth/middleware"
 
 export const config = {
-  // Match all routes except for the login page and the API routes
+  // Match all routes except for the login page and all API routes
   matcher: [
-    "/((?!api/auth|login).*)",
+    "/((?!api|login|_next/static|_next/image|favicon.ico).*)",
   ],
 };

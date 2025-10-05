@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { db } from '@/db';
 
 type Lesson = {
   id: number;
@@ -7,16 +8,13 @@ type Lesson = {
 };
 
 async function getLessons(): Promise<Lesson[]> {
-  // Use a relative path for the API call, which works in both dev and prod.
-  // The `fetch` in a Server Component on the server will call the API route.
-  const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000';
-  const res = await fetch(`${baseUrl}/api/lessons`, { cache: 'no-store' });
-
-  if (!res.ok) {
-    // This will activate the closest `error.js` Error Boundary
-    throw new Error('Failed to fetch lessons');
+  try {
+    const allLessons = await db.query.lessons.findMany();
+    return allLessons;
+  } catch (error) {
+    console.error('Failed to fetch lessons:', error);
+    return [];
   }
-  return res.json();
 }
 
 export default async function HomePage() {

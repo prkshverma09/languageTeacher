@@ -72,11 +72,18 @@ export async function POST(req: Request) {
 
     // 3. Generate Audio Response
     const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
-    const audioStream = await elevenlabs.generate({
-        voice: "Rachel",
+    // Using a default ElevenLabs voice ID (Rachel - 21m00Tcm4TlvDq8ikWAM)
+    const audioStream = await elevenlabs.textToSpeech.convert("21m00Tcm4TlvDq8ikWAM", {
         text: responseText,
         model_id: "eleven_multilingual_v2"
     });
+
+    // Collect audio chunks from the async iterable
+    const audioChunks: Buffer[] = [];
+    for await (const chunk of audioStream) {
+        audioChunks.push(chunk);
+    }
+    const audioBuffer = Buffer.concat(audioChunks);
 
     const headers = new Headers();
     headers.set("Content-Type", "audio/mpeg");
@@ -84,18 +91,7 @@ export async function POST(req: Request) {
     headers.set("X-Agent-Response", responseText);
     headers.set("X-Interaction-Result", interactionResult);
 
-    const readableStream = new ReadableStream({
-        start(controller) {
-            audioStream.on("data", (chunk) => controller.enqueue(chunk));
-            audioStream.on("end", () => controller.close());
-            audioStream.on("error", (err) => {
-                console.error("TTS Stream Error:", err);
-                controller.error(new Error("Error in generating speech audio."));
-            });
-        },
-    });
-
-    return new NextResponse(readableStream, { headers });
+    return new NextResponse(audioBuffer, { headers });
 
   } catch (error) {
     console.error("[CONVERSATION_API_ERROR]", error);

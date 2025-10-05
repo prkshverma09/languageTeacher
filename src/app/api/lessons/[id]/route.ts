@@ -5,10 +5,11 @@ import { eq } from 'drizzle-orm';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id, 10);
+    const { id: paramId } = await params;
+    const id = parseInt(paramId, 10);
 
     // Fetch the lesson
     const lesson = await db.query.lessons.findFirst({
@@ -28,7 +29,7 @@ export async function GET(
     return NextResponse.json({ ...lesson, steps });
 
   } catch (error) {
-    console.error(`Failed to fetch lesson with id ${params.id}:`, error);
+    console.error(`Failed to fetch lesson:`, error);
     return NextResponse.json({ error: 'Failed to fetch lesson' }, { status: 500 });
   }
 }

@@ -18,6 +18,17 @@ export const users = pgTable("users", {
   hashedPassword: text("hashed_password").notNull(),
   // Storing the current step_id for the user
   progress: integer("progress").default(1).notNull(),
+  // Language preferences
+  conversationLanguage: varchar("conversation_language", {
+    length: 10
+  }).default("en").notNull(), // User's native language (e.g., 'hi' for Hindi, 'es' for Spanish)
+  targetLanguage: varchar("target_language", {
+    length: 10
+  }).default("en").notNull(), // Language they want to learn (e.g., 'en' for English)
+  // Voice preference
+  preferredVoiceId: varchar("preferred_voice_id", {
+    length: 256
+  }).default("21m00Tcm4TlvDq8ikWAM"), // ElevenLabs voice ID
 });
 
 // Lessons Table
@@ -27,6 +38,13 @@ export const lessons = pgTable("lessons", {
     length: 256
   }).notNull(),
   description: text("description"),
+  // Language configuration for lessons
+  targetLanguage: varchar("target_language", {
+    length: 10
+  }).default("en").notNull(), // Language being taught
+  instructionLanguage: varchar("instruction_language", {
+    length: 10
+  }).default("en").notNull(), // Language of instructions
 });
 
 // LessonSteps Table

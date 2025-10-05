@@ -72,10 +72,13 @@ export async function POST(req: Request) {
 
     // 3. Generate Audio Response
     const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
-    // Using a default ElevenLabs voice ID (Rachel - 21m00Tcm4TlvDq8ikWAM)
-    const audioStream = await elevenlabs.textToSpeech.convert("21m00Tcm4TlvDq8ikWAM", {
+    // Use user's preferred voice or default
+    const voiceId = user.preferredVoiceId || "21m00Tcm4TlvDq8ikWAM";
+    const audioStream = await elevenlabs.textToSpeech.convert(voiceId, {
         text: responseText,
-        model_id: "eleven_multilingual_v2"
+        model_id: "eleven_multilingual_v2",
+        // Language hint based on user's conversation language
+        language_code: user.conversationLanguage || "en"
     });
 
     // Collect audio chunks from the async iterable

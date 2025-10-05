@@ -55,11 +55,20 @@ To run and test the application on your local machine, follow these steps:
 
 ### 1. Prerequisites
 
--   Node.js and npm installed.
--   A PostgreSQL database instance.
+-   [Node.js](https://nodejs.org/en/) and npm installed.
+-   [Docker](https://www.docker.com/get-started) installed.
 -   An ElevenLabs API key.
 
 ### 2. Setup
+
+1.  **Start a PostgreSQL database using Docker:**
+    If you don't have a local PostgreSQL instance, you can easily start one using Docker. Run the following command in your terminal:
+    ```bash
+    docker run --name language-tutor-db -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=myuser -e POSTGRES_DB=languagetutor -p 5432:5432 -d postgres
+    ```
+    This command will start a PostgreSQL container named `language-tutor-db` and make it accessible on port 5432.
+
+2.  **Clone the repository:**
 
 1.  **Clone the repository:**
     ```bash
@@ -73,19 +82,18 @@ To run and test the application on your local machine, follow these steps:
     ```
 
 3.  **Set up environment variables:**
-    Create a `.env` file in the root of the project and add the following variables:
+    Create a `.env` file in the root of the project and add the following variables. Use the credentials from the Docker command for the `DATABASE_URL`.
     ```
-    DATABASE_URL="postgresql://user:password@host:port/db"
+    DATABASE_URL="postgresql://myuser:mysecretpassword@localhost:5432/languagetutor"
     ELEVENLABS_API_KEY="your-elevenlabs-api-key"
     NEXTAUTH_SECRET="your-nextauth-secret" # Generate with: openssl rand -base64 32
     NEXTAUTH_URL="http://localhost:3000"
     ```
 
 4.  **Run database migrations:**
-    Apply the database schema to your PostgreSQL database.
+    This command will apply the schema to your database.
     ```bash
-    npm run db:generate # This will create the migration file if it doesn't exist
-    # You will need a separate tool to apply the migration to your database.
+    npm run db:push
     ```
 
 5.  **Seed the database:**

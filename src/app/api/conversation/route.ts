@@ -1,49 +1,90 @@
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { NextResponse } from "next/server";
+import { lessons, lessonSteps } from '@/lib/data';
+
+// A simple in-memory store for the user's progress.
+// In a real application, this would be stored in a database.
+let userState = {
+  currentLessonId: 1,
+  currentStepId: 1,
+};
 
 export async function POST(req: Request) {
-  // This is a placeholder implementation.
-  // In a real scenario, you would handle the user's audio stream,
-  // process it, and return the agent's audio response.
-
-  const elevenlabs = new ElevenLabsClient({
-    apiKey: process.env.ELEVENLABS_API_KEY,
-  });
-
-  // For now, let's just return a success message.
-  // In the future, this will return an audio stream.
-  const text = "This is a mock response from the agent.";
-
   try {
-    const audio = await elevenlabs.generate({
+    const audioBlob = await req.blob();
+
+    // 1. Transcribe the user's audio
+    const formData = new FormData();
+    formData.append("file", audioBlob, "audio.webm");
+    formData.append("model_id", "scribe_v1");
+
+    const sttResponse = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
+      method: "POST",
+      headers: { "xi-api-key": process.env.ELEVENLABS_API_KEY! },
+      body: formData,
+    });
+
+    if (!sttResponse.ok) {
+      throw new Error(`STT API request failed with status ${sttResponse.status}`);
+    }
+
+    const sttResult = await sttResponse.json();
+    const transcribedText = sttResult.text || "";
+    console.log("Transcribed text:", transcribedText);
+
+    // 2. Implement the core conversation logic
+    const currentStep = lessonSteps.find(step => step.id === userState.currentStepId);
+
+    let responseText;
+
+    if (!currentStep) {
+      responseText = "You have completed all lessons. Congratulations!";
+    } else {
+      // Very simple check for correctness. A real app would use more sophisticated logic.
+      const isCorrect = transcribedText.trim().toLowerCase().includes(currentStep.expectedUserResponse.toLowerCase());
+
+      if (isCorrect) {
+        responseText = currentStep.successFeedback;
+        // Advance to the next step
+        if (currentStep.nextStepId) {
+          userState.currentStepId = currentStep.nextStepId;
+        } else {
+          // End of the lesson
+          responseText += " You've finished this lesson!";
+          userState.currentStepId = -1; // Sentinel value for lesson completion
+        }
+      } else {
+        responseText = currentStep.failureFeedback;
+        // User stays on the same step to try again
+      }
+    }
+
+    // 3. Generate and stream the audio response
+    const elevenlabs = new ElevenLabsClient({
+      apiKey: process.env.ELEVENLABS_API_KEY,
+    });
+
+    const audioStream = await elevenlabs.generate({
         voice: "Rachel",
-        text,
+        text: responseText,
         model_id: "eleven_multilingual_v2"
     });
 
     const headers = new Headers();
     headers.set("Content-Type", "audio/mpeg");
 
-    // The SDK returns a Node.js Readable stream.
-    // We need to convert it to a Web Stream for the Next.js App Router.
     const readableStream = new ReadableStream({
         start(controller) {
-            audio.on("data", (chunk) => {
-                controller.enqueue(chunk);
-            });
-            audio.on("end", () => {
-                controller.close();
-            });
-            audio.on("error", (err) => {
-                controller.error(err);
-            });
+            audioStream.on("data", (chunk) => controller.enqueue(chunk));
+            audioStream.on("end", () => controller.close());
+            audioStream.on("error", (err) => controller.error(err));
         },
     });
 
     return new NextResponse(readableStream, { headers });
 
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Failed to generate audio" }, { status: 500 });
+    console.error("Error in conversation API:", error);
+    return NextResponse.json({ error: "Failed to process audio" }, { status: 500 });
   }
 }

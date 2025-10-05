@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef } from 'react';
-import { lessons as allLessons, lessonSteps as allLessonSteps } from '@/lib/data';
 
 type LessonStep = {
   id: number;
@@ -131,21 +130,17 @@ function LessonClientComponent({ lesson }: { lesson: Lesson }) {
   );
 }
 
-// Fetching data directly in the server component
-function getLesson(id: string): Lesson | null {
-    const lessonId = parseInt(id, 10);
-    const lesson = allLessons.find((l) => l.id === lessonId);
-
-    if (!lesson) {
-        return null;
+async function getLesson(id: string): Promise<Lesson> {
+    const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/lessons/${id}`, { cache: 'no-store' });
+    if (!res.ok) {
+        throw new Error('Failed to fetch lesson');
     }
-
-    const steps = allLessonSteps.filter((step) => step.lessonId === lessonId);
-    return { ...lesson, steps };
+    return res.json();
 }
 
-export default function LessonPage({ params }: { params: { id: string } }) {
-  const lesson = getLesson(params.id);
+export default async function LessonPage({ params }: { params: { id: string } }) {
+  const lesson = await getLesson(params.id);
 
   if (!lesson) {
     return (

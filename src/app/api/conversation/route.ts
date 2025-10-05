@@ -1,6 +1,8 @@
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { NextResponse } from "next/server";
-import { lessons, lessonSteps } from '@/lib/data';
+import { db } from '@/db';
+import { lessonSteps } from '@/drizzle/schema';
+import { eq } from 'drizzle-orm';
 
 // A simple in-memory store for the user's progress.
 // In a real application, this would be stored in a database.
@@ -32,16 +34,18 @@ export async function POST(req: Request) {
     const transcribedText = sttResult.text || "";
     console.log("Transcribed text:", transcribedText);
 
-    // 2. Implement the core conversation logic
-    const currentStep = lessonSteps.find(step => step.id === userState.currentStepId);
+    // 2. Implement the core conversation logic using the database
+    const currentStep = await db.query.lessonSteps.findFirst({
+        where: eq(lessonSteps.id, userState.currentStepId),
+    });
 
     let responseText;
 
     if (!currentStep) {
       responseText = "You have completed all lessons. Congratulations!";
     } else {
-      // Very simple check for correctness. A real app would use more sophisticated logic.
-      const isCorrect = transcribedText.trim().toLowerCase().includes(currentStep.expectedUserResponse.toLowerCase());
+      // Very simple check for correctness.
+      const isCorrect = transcribedText.trim().toLowerCase().includes(currentStep.expectedUserResponse?.toLowerCase() || '---');
 
       if (isCorrect) {
         responseText = currentStep.successFeedback;
@@ -55,7 +59,6 @@ export async function POST(req: Request) {
         }
       } else {
         responseText = currentStep.failureFeedback;
-        // User stays on the same step to try again
       }
     }
 

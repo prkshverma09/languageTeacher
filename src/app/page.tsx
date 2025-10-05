@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { lessons } from '@/lib/data'; // Import mock data directly
 
 type Lesson = {
   id: number;
@@ -7,13 +6,21 @@ type Lesson = {
   description: string;
 };
 
-// No need for an async function to fetch data that's locally available
-function getLessons(): Lesson[] {
-  return lessons;
+async function getLessons(): Promise<Lesson[]> {
+  // Use a relative path for the API call, which works in both dev and prod.
+  // The `fetch` in a Server Component on the server will call the API route.
+  const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000';
+  const res = await fetch(`${baseUrl}/api/lessons`, { cache: 'no-store' });
+
+  if (!res.ok) {
+    // This will activate the closest `error.js` Error Boundary
+    throw new Error('Failed to fetch lessons');
+  }
+  return res.json();
 }
 
-export default function HomePage() {
-  const lessons = getLessons();
+export default async function HomePage() {
+  const lessons = await getLessons();
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gray-900 text-white">

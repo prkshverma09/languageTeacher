@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { lessons } from '@/lib/data'; // Import mock data directly
 
 type Lesson = {
   id: number;
@@ -6,19 +7,13 @@ type Lesson = {
   description: string;
 };
 
-async function getLessons(): Promise<Lesson[]> {
-  // In a real app, you'd fetch from an absolute URL.
-  // For this example, we'll assume the API is available at this path.
-  // This will not work in production builds without a proper domain.
-  const res = await fetch('http://localhost:3000/api/lessons', { cache: 'no-store' });
-  if (!res.ok) {
-    throw new Error('Failed to fetch lessons');
-  }
-  return res.json();
+// No need for an async function to fetch data that's locally available
+function getLessons(): Lesson[] {
+  return lessons;
 }
 
-export default async function HomePage() {
-  const lessons = await getLessons();
+export default function HomePage() {
+  const lessons = getLessons();
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gray-900 text-white">

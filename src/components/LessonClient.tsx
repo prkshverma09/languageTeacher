@@ -83,13 +83,13 @@ export default function LessonClient({ lesson }: { lesson: Lesson }) {
             const encoding = response.headers.get('X-Encoding');
             let userTranscription = response.headers.get('X-User-Transcription') || '';
             let agentResponse = response.headers.get('X-Agent-Response') || '';
-            
+
             // Decode base64 if encoded
             if (encoding === 'base64') {
               userTranscription = atob(userTranscription);
               agentResponse = atob(agentResponse);
             }
-            
+
             const interactionResult = response.headers.get('X-Interaction-Result') as 'success' | 'failure';
 
             setTranscript((prev) => [

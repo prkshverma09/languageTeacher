@@ -19,16 +19,16 @@ type MultilingualLessonStep = {
 };
 
 export const multilingualLessons = [
-  { 
-    id: 1, 
-    title: "Lesson 1: Greetings", 
+  {
+    id: 1,
+    title: "Lesson 1: Greetings",
     description: "Learn basic greetings in English.",
     targetLanguage: "en",
     instructionLanguage: "en" // Default, will be overridden
   },
-  { 
-    id: 2, 
-    title: "Lesson 2: Common Phrases", 
+  {
+    id: 2,
+    title: "Lesson 2: Common Phrases",
     description: "Learn common phrases for everyday conversations.",
     targetLanguage: "en",
     instructionLanguage: "en" // Default, will be overridden

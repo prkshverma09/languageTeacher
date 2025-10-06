@@ -27,12 +27,14 @@ The primary target audience is individuals who are native speakers of one langua
 
 #### **Core Voice Interaction & Learning Experience**
 
-* **Bilingual Conversation:** The agent will primarily communicate in the user's native language (Language B) to explain concepts, give instructions, and provide feedback. It will introduce words and phrases from the target language (Language A) as part of the lesson.
+* **Bilingual Conversation:** The agent will **ALWAYS communicate in the user's native language (Language B)** to explain concepts, give instructions, and provide feedback. It will teach words and phrases from the target language (Language A) as part of the lesson.
+  * **Example:** A Hindi speaker learning English will hear: *"चलिए एक सरल अभिवादन से शुरू करते हैं। अंग्रेजी में 'Hello' कैसे कहते हैं?"* (Let's start with a simple greeting. How do you say 'Hello' in English?)
   * **Language Selection:** Users must be able to select their conversation language (Language B - e.g., Hindi, Spanish, French) and their target learning language (Language A - e.g., English).
   * **Mixed Language Input:** The system should handle user responses that mix both languages (e.g., a Hindi-speaking user responding mostly in Hindi with English phrases they're learning).
   * **Configurable per User:** Each user can have their own language preference stored in their profile.
+  * **Content Localization:** ALL lesson content (instructions, feedback, prompts) must be available in the user's conversation language. The system uses a multilingual content structure with translations.
 * **Speech-to-Text (STT):** The system will use ElevenLabs' ASR model to accurately transcribe the user's spoken responses in both Language A and Language B. The STT must support multi-language detection to handle mixed-language responses.
-* **Text-to-Speech (TTS):** All agent dialogue will be generated using ElevenLabs' high-quality, low-latency TTS, offering a wide variety of voices to keep the experience engaging. The TTS should use appropriate language models based on the user's selected conversation language.
+* **Text-to-Speech (TTS):** All agent dialogue will be generated using ElevenLabs' high-quality, low-latency TTS with the `language_code` parameter set to the user's conversation language. The TTS must use appropriate language models and voices that support the conversation language.
 * **Pronunciation Feedback (Future Scope):** While initial implementation will focus on comprehension, a future version could leverage STT analysis to provide basic feedback on the user's pronunciation of Language A.
 * **Lesson Progression:** The agent will guide the user through a pre-defined sequence of lessons, tracking their progress and adapting to their pace.
 * **Progress Management:** Users should have the ability to reset their progress across all lessons for testing and practice purposes.
@@ -41,15 +43,32 @@ The primary target audience is individuals who are native speakers of one langua
 
 * **Dynamic Lesson Structure:** Lessons should not be hard-coded. They will be stored in a database and fetched by the backend.
 * **Editable Content:** A simple admin interface or a CMS (Content Management System) should allow non-technical users to create, read, update, and delete lessons.
-* **Lesson Components:** Each lesson should be broken down into structured steps or "turns." For example:
+* **Lesson Components:** Each lesson should be broken down into structured steps or "turns." Each step must include:
     * `step_id`: Unique identifier for the step.
     * `lesson_id`: Which lesson this step belongs to.
-    * `agent_prompt_b`: The text the agent speaks in Language B (e.g., "Now, let's learn how to say 'hello' in English.").
     * `target_phrase_a`: The word or phrase to be taught in Language A (e.g., "Hello").
     * `expected_user_response`: The ideal response from the user (can be flexible).
-    * `success_feedback`: What the agent says if the user is correct (e.g., "That's right!").
-    * `failure_feedback`: What the agent says if the user is incorrect (e.g., "Not quite, let's try again. The word is 'Hello'.").
+    * `translations`: Object containing translations for each supported conversation language:
+        * `agent_prompt_b`: The text the agent speaks in Language B (e.g., in Hindi: "अंग्रेजी में 'Hello' कैसे कहते हैं?").
+        * `success_feedback`: What the agent says if the user is correct (e.g., in Hindi: "बहुत बढ़िया! 'Hello' सही है।").
+        * `failure_feedback`: What the agent says if the user is incorrect (e.g., in Hindi: "सही उत्तर 'Hello' है। फिर से कोशिश करते हैं।").
     * `next_step_id`: The ID of the next step in the lesson.
+    
+    **Example Structure:**
+    ```javascript
+    {
+      id: 1,
+      lessonId: 1,
+      targetPhraseA: "Hello",
+      expectedUserResponse: "Hello",
+      translations: {
+        en: { agentPromptB: "How do you say 'Hello' in English?", ... },
+        hi: { agentPromptB: "अंग्रेजी में 'Hello' कैसे कहते हैं?", ... },
+        es: { agentPromptB: "¿Cómo se dice 'Hello' en inglés?", ... }
+      },
+      nextStepId: 2
+    }
+    ```
 
 ---
 

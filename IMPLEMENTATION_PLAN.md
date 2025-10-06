@@ -118,32 +118,37 @@ This document breaks down the implementation of the AI Language Tutor project in
 
 *   **Description:** Enable users to select their conversation language (e.g., Hindi) and target learning language (e.g., English), with full support for mixed-language input.
 *   **Priority:** HIGH (PRD Core Feature: "Bilingual Conversation with Language Selection")
-*   **Status:** ⚠️ Currently only supports English, needs full multi-language support
+*   **Status:** ✅ Core implementation complete, UI enhancements needed
 *   **Sub-tasks:**
-    *   ❌ **Database Schema Updates:**
-        *   Add `conversation_language` field to users table (e.g., 'hi' for Hindi, 'es' for Spanish)
-        *   Add `target_language` field to users table (e.g., 'en' for English)
-        *   Add `target_language` and `instruction_language` fields to lessons table
-    *   ❌ **Language Selection UI:**
-        *   Create language selection page/modal on first login
-        *   Add language preferences section in user settings/profile
-        *   Display current language pair in header or lesson page
-        *   Support language pairs: Hindi↔English, Spanish↔English, French↔English (expandable)
-    *   ❌ **ElevenLabs Multi-Language Configuration:**
-        *   Configure STT to support multi-language detection (handle mixed Hindi-English input)
-        *   Update TTS to use appropriate voice and model based on user's conversation language
-        *   Test with ElevenLabs' multilingual models (eleven_multilingual_v2)
-    *   ❌ **API Endpoint Updates:**
-        *   Update `/api/conversation` to pass user's language preferences to ElevenLabs
-        *   Ensure STT can transcribe mixed-language responses
-        *   Ensure TTS generates audio in the correct language
-    *   ❌ **Lesson Content Updates:**
-        *   Create bilingual lesson content (e.g., Hindi instructions with English target phrases)
-        *   Update seed data with multi-language lessons
-        *   Ensure lesson steps have translations for different instruction languages
-    *   ❌ **Response Validation:**
-        *   Update validation logic to handle mixed-language responses
-        *   Consider language-specific fuzzy matching
+    *   ✅ **Database Schema Updates:**
+        *   ✅ Add `conversation_language` field to users table (e.g., 'hi' for Hindi, 'es' for Spanish)
+        *   ✅ Add `target_language` field to users table (e.g., 'en' for English)
+        *   ✅ Add `target_language` and `instruction_language` fields to lessons table
+        *   ✅ Add `preferred_voice_id` field to users table
+    *   ✅ **Language Selection UI:**
+        *   ✅ Create user settings page with language selection
+        *   ✅ Add language preferences section in user settings/profile
+        *   ❌ Display current language pair in header or lesson page
+        *   ✅ Support language pairs: Hindi↔English, Spanish↔English, French↔English (expandable)
+    *   ✅ **Multilingual Content System:**
+        *   ✅ Create multilingual-data.ts with translation structure
+        *   ✅ Implement translations for Hindi, Spanish, French, English
+        *   ✅ Create getLessonStepContent() helper to fetch content in user's language
+        *   ✅ All lesson steps now have translations for all supported languages
+    *   ✅ **API Endpoint Updates:**
+        *   ✅ Update `/api/conversation` to use user's conversation language
+        *   ✅ Fetch lesson content in user's conversation language
+        *   ✅ Generate TTS audio in user's conversation language
+        *   ✅ Fix HTTP header encoding for non-ASCII characters (base64 encoding)
+    *   ⚠️ **ElevenLabs Multi-Language Configuration:**
+        *   ✅ Using eleven_multilingual_v2 model for TTS
+        *   ❌ Need to add language_code parameter to TTS API call
+        *   ❌ Configure STT to support multi-language detection (handle mixed Hindi-English input)
+        *   ❌ Test with different voices for different languages
+    *   ⚠️ **Response Validation:**
+        *   ⚠️ Currently uses simple string matching
+        *   ❌ Update validation logic to handle mixed-language responses
+        *   ❌ Consider language-specific fuzzy matching
 
 ## Task 10: Improved Response Validation
 
@@ -229,19 +234,17 @@ This document breaks down the implementation of the AI Language Tutor project in
 
 *   **Description:** Add functionality for users to reset their progress across all lessons for testing and practice.
 *   **Priority:** HIGH (Essential for testing and user flexibility)
-*   **Status:** ❌ Not started
+*   **Status:** ✅ Complete
 *   **Sub-tasks:**
-    *   ❌ **Backend Implementation:**
-        *   Create API endpoint: `POST /api/user/reset-progress`
-        *   Implement logic to reset user's progress field to initial state (step 1)
-        *   Add confirmation mechanism to prevent accidental resets
-        *   Log reset actions for analytics/debugging
-    *   ❌ **Frontend Implementation:**
-        *   Add "Reset Progress" button in user settings or profile page
-        *   Implement confirmation dialog with warning message
-        *   Show success message after reset
-        *   Redirect user to first lesson after reset
+    *   ✅ **Backend Implementation:**
+        *   ✅ Create API endpoint: `POST /api/user/reset-progress`
+        *   ✅ Implement logic to reset user's progress field to initial state (step 1)
+        *   ✅ Log reset actions for analytics/debugging
+    *   ✅ **Frontend Implementation:**
+        *   ✅ Add "Reset Progress" button in user settings page
+        *   ✅ Implement confirmation dialog with warning message
+        *   ✅ Show success message after reset
     *   ❌ **Optional Enhancements:**
-        *   Add ability to reset individual lessons (not just all progress)
-        *   Track reset history in database
-        *   Add "Start Over" option on lesson completion screen
+        *   ❌ Add ability to reset individual lessons (not just all progress)
+        *   ❌ Track reset history in database
+        *   ❌ Add "Start Over" option on lesson completion screen

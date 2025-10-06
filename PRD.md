@@ -53,7 +53,7 @@ The primary target audience is individuals who are native speakers of one langua
         * `success_feedback`: What the agent says if the user is correct (e.g., in Hindi: "बहुत बढ़िया! 'Hello' सही है।").
         * `failure_feedback`: What the agent says if the user is incorrect (e.g., in Hindi: "सही उत्तर 'Hello' है। फिर से कोशिश करते हैं।").
     * `next_step_id`: The ID of the next step in the lesson.
-    
+
     **Example Structure:**
     ```javascript
     {

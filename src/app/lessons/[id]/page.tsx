@@ -1,19 +1,14 @@
 import { db } from '@/db';
-import { lessons, lessonSteps } from '@/drizzle/schema';
+import { lessons } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import LessonClient from '@/components/LessonClient';
-
-type LessonStep = {
-  id: number;
-  agentPromptB: string;
-  targetPhraseA: string;
-};
 
 type Lesson = {
   id: number;
   title: string;
-  description: string;
-  steps: LessonStep[];
+  description: string | null;
+  estimatedDuration: number | null;
+  difficultyLevel: string | null;
 };
 
 async function getLesson(id: string): Promise<Lesson | null> {
@@ -28,12 +23,13 @@ async function getLesson(id: string): Promise<Lesson | null> {
       return null;
     }
 
-    const steps = await db.query.lessonSteps.findMany({
-      where: eq(lessonSteps.lessonId, lessonId),
-      orderBy: (lessonSteps, { asc }) => [asc(lessonSteps.id)],
-    });
-
-    return { ...lesson, steps };
+    return {
+      id: lesson.id,
+      title: lesson.title,
+      description: lesson.description,
+      estimatedDuration: lesson.estimatedDuration,
+      difficultyLevel: lesson.difficultyLevel,
+    };
   } catch (error) {
     console.error("Failed to fetch lesson:", error);
     return null;

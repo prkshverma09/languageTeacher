@@ -2,6 +2,10 @@
 
 This document breaks down the implementation of the AI Language Tutor project into distinct tasks.
 
+## 🔄 ARCHITECTURE CHANGE: Moving to ElevenLabs Agents Platform
+
+The application is transitioning from a "push to talk" TTS/STT approach to using **ElevenLabs Agents Platform** for natural, conversational voice interactions. This change affects the entire architecture and requires new implementation tasks outlined below.
+
 ## ✅ Task 1: Core Voice Interaction (Client-Side) - COMPLETED
 
 *   **Description:** Implement the core user-facing features for voice interaction on the frontend.
@@ -248,3 +252,366 @@ This document breaks down the implementation of the AI Language Tutor project in
         *   ❌ Add ability to reset individual lessons (not just all progress)
         *   ❌ Track reset history in database
         *   ❌ Add "Start Over" option on lesson completion screen
+
+---
+
+## 🆕 AGENT PLATFORM IMPLEMENTATION TASKS
+
+## Task 17: ElevenLabs Agent Infrastructure Setup
+
+*   **Description:** Set up the infrastructure for creating and managing ElevenLabs conversational agents.
+*   **Priority:** CRITICAL (Foundation for new architecture)
+*   **Status:** ❌ Not started
+*   **Dependencies:** None
+*   **Sub-tasks:**
+    *   ❌ **Environment Setup:**
+        *   ❌ Add ElevenLabs API key to environment variables
+        *   ❌ Install ElevenLabs SDK/API client library
+        *   ❌ Set up development agent for testing
+    *   ❌ **Database Schema Updates:**
+        *   ❌ Add `agentId` field to users table
+        *   ❌ Create `agents` table to track agent configurations
+        *   ❌ Create `conversations` table to store conversation history
+        *   ❌ Add `knowledgeBaseIds` field to lessons table
+        *   ❌ Run database migrations
+    *   ❌ **API Endpoint Creation:**
+        *   ❌ `POST /api/agents/create` - Create/update user's agent
+        *   ❌ `GET /api/agents/:userId` - Get user's agent info
+        *   ❌ `DELETE /api/agents/:userId` - Delete user's agent
+        *   ❌ `POST /api/agents/test` - Test agent configuration
+    *   ❌ **Agent Configuration Logic:**
+        *   ❌ Create function to generate system prompts based on user languages
+        *   ❌ Implement agent creation with proper voice selection
+        *   ❌ Set up LLM configuration (model, temperature, etc.)
+        *   ❌ Handle agent updates when user changes language preferences
+
+## Task 18: Lesson-to-Knowledge-Base Conversion
+
+*   **Description:** Convert lesson structure from step-by-step scripts to knowledge base guidance documents.
+*   **Priority:** CRITICAL (Required for agent to teach effectively)
+*   **Status:** ❌ Not started
+*   **Dependencies:** Task 17
+*   **Sub-tasks:**
+    *   ❌ **Schema Redesign:**
+        *   ❌ Update lessons table schema to support new structure
+        *   ❌ Add fields: `learningObjectives`, `teachingGuidance`, `exampleConversations`, `estimatedDuration`, `difficultyLevel`
+        *   ❌ Keep `translations` but restructure for greeting, objectives, teaching points, conclusion
+        *   ❌ Remove `lessonSteps` table (no longer needed for strict turn-by-turn)
+    *   ❌ **Content Migration:**
+        *   ❌ Convert existing lesson data to new format
+        *   ❌ Expand lesson content to teach multiple phrases per lesson
+        *   ❌ Create comprehensive teaching guidance for each lesson
+        *   ❌ Add example conversations demonstrating target phrases
+        *   ❌ Write greeting and conclusion text for each lesson
+    *   ❌ **Knowledge Base API:**
+        *   ❌ `POST /api/lessons/:id/knowledge-base` - Create/update lesson knowledge base
+        *   ❌ Implement function to format lesson as knowledge base text
+        *   ❌ Upload lesson content to ElevenLabs agent's knowledge base
+        *   ❌ Handle knowledge base updates when lesson content changes
+    *   ❌ **Testing:**
+        *   ❌ Verify knowledge base is properly accessible to agent
+        *   ❌ Test agent's ability to use lesson guidance effectively
+
+## Task 19: Frontend Agent Integration (WebSocket)
+
+*   **Description:** Replace "push to talk" with continuous WebSocket-based conversation.
+*   **Priority:** CRITICAL (Core user experience change)
+*   **Status:** ❌ Not started
+*   **Dependencies:** Task 17
+*   **Sub-tasks:**
+    *   ❌ **Remove Old Implementation:**
+        *   ❌ Remove "Push to Talk" button and related logic
+        *   ❌ Remove manual audio recording controls
+        *   ❌ Remove `/api/conversation` endpoint (replaced by direct agent connection)
+    *   ❌ **ElevenLabs SDK Integration:**
+        *   ❌ Install and configure ElevenLabs Conversational AI SDK
+        *   ❌ Set up WebSocket connection to user's agent
+        *   ❌ Implement continuous audio streaming to agent
+        *   ❌ Handle real-time audio playback from agent
+    *   ❌ **Connection Management:**
+        *   ❌ "Start Conversation" button to initiate WebSocket connection
+        *   ❌ "End Conversation" button to gracefully close connection
+        *   ❌ Connection status indicator (connected, connecting, disconnected, error)
+        *   ❌ Auto-reconnection logic on connection drop
+        *   ❌ Handle browser permissions for microphone access
+    *   ❌ **Visual Feedback:**
+        *   ❌ Real-time audio waveform visualization during agent speech
+        *   ❌ Listening indicator when agent is processing user speech
+        *   ❌ Interruption feedback (show when user successfully interrupts)
+        *   ❌ Thinking/processing animation
+    *   ❌ **Transcript Display:**
+        *   ❌ Real-time transcript updates from WebSocket events
+        *   ❌ Distinguish user speech vs agent speech visually
+        *   ❌ Auto-scroll to latest message
+        *   ❌ Persist transcript in conversation history
+
+## Task 20: Conversation Session Management
+
+*   **Description:** Implement session management for conversations between users and agents.
+*   **Priority:** HIGH (Required for progress tracking and history)
+*   **Status:** ❌ Not started
+*   **Dependencies:** Task 17, Task 19
+*   **Sub-tasks:**
+    *   ❌ **Session Creation:**
+        *   ❌ `POST /api/conversations/start` - Create new conversation session
+        *   ❌ Link session to user, agent, and current lesson
+        *   ❌ Generate unique conversation ID
+        *   ❌ Store session start time and metadata
+    *   ❌ **Session Tracking:**
+        *   ❌ Track conversation duration
+        *   ❌ Store full transcript as conversation progresses
+        *   ❌ Track user interruptions and questions
+        *   ❌ Monitor lesson objectives covered
+    *   ❌ **Session Completion:**
+        *   ❌ `POST /api/conversations/:id/complete` - Mark conversation as complete
+        *   ❌ Determine if lesson objectives were met
+        *   ❌ Update user progress if lesson completed
+        *   ❌ Store final transcript and metadata
+    *   ❌ **Conversation History:**
+        *   ❌ `GET /api/conversations/:id` - Retrieve conversation details
+        *   ❌ `GET /api/conversations/user/:userId` - Get user's conversation history
+        *   ❌ Display conversation history in user dashboard
+        *   ❌ Allow users to review past conversations and transcripts
+
+## Task 21: Dynamic System Prompt Generation
+
+*   **Description:** Create dynamic system prompts that configure the agent's behavior based on user preferences and lesson context.
+*   **Priority:** HIGH (Critical for proper agent behavior)
+*   **Status:** ❌ Not started
+*   **Dependencies:** Task 17
+*   **Sub-tasks:**
+    *   ❌ **Prompt Template System:**
+        *   ❌ Create base template for language tutor role
+        *   ❌ Add placeholders for user languages, lesson info, teaching style
+        *   ❌ Support multilingual prompt generation
+    *   ❌ **Context Injection:**
+        *   ❌ Inject user's conversation language
+        *   ❌ Inject user's target learning language
+        *   ❌ Inject current lesson objectives and guidance
+        *   ❌ Inject user's learning history and preferences
+    *   ❌ **Behavioral Guidelines:**
+        *   ❌ Always speak in conversation language (Language B)
+        *   ❌ Teach target language (Language A) phrases with context
+        *   ❌ Stay focused on lesson objectives (80% on-topic, 20% flexibility)
+        *   ❌ Handle interruptions gracefully
+        *   ❌ Provide encouraging feedback
+        *   ❌ Adapt to user's pace and questions
+    *   ❌ **Example Prompts:**
+        *   ❌ Create reference prompts for Hindi speaker learning English
+        *   ❌ Create reference prompts for Spanish speaker learning English
+        *   ❌ Create reference prompts for French speaker learning English
+        *   ❌ Test and refine prompt effectiveness
+
+## Task 22: Lesson Greeting and Introduction
+
+*   **Description:** Implement automatic lesson introduction when user starts a conversation.
+*   **Priority:** MEDIUM (User experience enhancement)
+*   **Status:** ❌ Not started
+*   **Dependencies:** Task 19, Task 21
+*   **Sub-tasks:**
+    *   ❌ **Greeting Content:**
+        *   ❌ Add greeting text to lesson translations
+        *   ❌ Include lesson objectives in introduction
+        *   ❌ Add estimated duration information
+        *   ❌ Create welcoming, encouraging tone
+    *   ❌ **Greeting Trigger:**
+        *   ❌ Inject greeting prompt when lesson conversation starts
+        *   ❌ Ensure agent speaks greeting first (before user)
+        *   ❌ Pass lesson context to agent at conversation start
+    *   ❌ **User Context:**
+        *   ❌ Reference user's progress (e.g., "Welcome back!")
+        *   ❌ Mention previous lesson if applicable
+        *   ❌ Personalize greeting based on user's name
+    *   ❌ **Testing:**
+        *   ❌ Test greeting in all supported languages
+        *   ❌ Verify lesson objectives are clearly communicated
+        *   ❌ Ensure smooth transition from greeting to lesson content
+
+## Task 23: Conversation Flow Control
+
+*   **Description:** Implement logic to keep conversations focused on lessons while allowing natural flexibility.
+*   **Priority:** MEDIUM (Balances structure with natural conversation)
+*   **Status:** ❌ Not started
+*   **Dependencies:** Task 21
+*   **Sub-tasks:**
+    *   ❌ **Focus Guidelines:**
+        *   ❌ Define "on-topic" boundaries in system prompt
+        *   ❌ Allow related questions and discussions
+        *   ❌ Gently redirect when conversation strays too far
+        *   ❌ Use natural language to bring focus back to lesson
+    *   ❌ **Redirection Strategies:**
+        *   ❌ Acknowledge user's question/comment
+        *   ❌ Answer briefly if relevant
+        *   ❌ Smoothly transition back to lesson content
+        *   ❌ Example: "That's interesting! Speaking of which, let's practice..."
+    *   ❌ **Progress Tracking:**
+        *   ❌ Track which objectives have been covered
+        *   ❌ Ensure all objectives addressed before lesson completion
+        *   ❌ Allow flexible order of objective coverage
+    *   ❌ **Testing:**
+        *   ❌ Test with off-topic questions
+        *   ❌ Verify gentle redirection works
+        *   ❌ Ensure natural conversation flow maintained
+
+## Task 24: Extended Lesson Content Creation
+
+*   **Description:** Create longer, more comprehensive lessons teaching multiple related phrases.
+*   **Priority:** HIGH (Core content requirement)
+*   **Status:** ❌ Not started
+*   **Dependencies:** Task 18
+*   **Sub-tasks:**
+    *   ❌ **Lesson Redesign:**
+        *   ❌ Expand Lesson 1 (Greetings) to cover 5-7 phrases
+        *   ❌ Create Lesson 2 (Introductions) - "My name is...", "Nice to meet you", etc.
+        *   ❌ Create Lesson 3 (Common Phrases) - "Please", "Thank you", "Excuse me", "Sorry"
+        *   ❌ Create Lesson 4 (Numbers & Time) - Basic counting, telling time
+        *   ❌ Create Lesson 5 (Shopping) - Asking prices, making purchases
+    *   ❌ **Content Structure:**
+        *   ❌ 5-10 key phrases per lesson
+        *   ❌ Usage examples for each phrase
+        *   ❌ Common mistakes and clarifications
+        *   ❌ Cultural context where relevant
+        *   ❌ Practice scenarios for conversation
+    *   ❌ **Multilingual Translation:**
+        *   ❌ Translate all lesson content to Hindi
+        *   ❌ Translate all lesson content to Spanish
+        *   ❌ Translate all lesson content to French
+        *   ❌ Ensure cultural appropriateness of examples
+    *   ❌ **Quality Assurance:**
+        *   ❌ Review with native speakers
+        *   ❌ Test lesson flow with real conversations
+        *   ❌ Adjust based on feedback
+
+## Task 25: Agent Voice Selection and Configuration
+
+*   **Description:** Allow users to select appropriate voices for their conversation language.
+*   **Priority:** MEDIUM (User experience personalization)
+*   **Status:** ❌ Not started
+*   **Dependencies:** Task 17
+*   **Sub-tasks:**
+    *   ❌ **Voice Discovery:**
+        *   ❌ Fetch available voices from ElevenLabs API
+        *   ❌ Filter voices by supported language
+        *   ❌ Categorize voices by characteristics (gender, age, accent)
+    *   ❌ **Voice Selection UI:**
+        *   ❌ Add voice selection to user settings
+        *   ❌ Display voice preview/description
+        *   ❌ Allow users to test voices before selecting
+        *   ❌ Show recommended voices for each language
+    *   ❌ **Voice Configuration:**
+        *   ❌ Store user's preferred voice in database
+        *   ❌ Update agent configuration when voice changes
+        *   ❌ Set appropriate voice for conversation language
+        *   ❌ Handle voice availability issues
+    *   ❌ **Default Voices:**
+        *   ❌ Select good default voice for Hindi
+        *   ❌ Select good default voice for Spanish
+        *   ❌ Select good default voice for French
+        *   ❌ Select good default voice for English
+
+## Task 26: Conversation Analytics and Insights
+
+*   **Description:** Track and analyze conversation metrics to improve the learning experience.
+*   **Priority:** LOW (Nice to have for optimization)
+*   **Status:** ❌ Not started
+*   **Dependencies:** Task 20
+*   **Sub-tasks:**
+    *   ❌ **Metrics Collection:**
+        *   ❌ Track conversation duration per lesson
+        *   ❌ Count user interruptions and questions
+        *   ❌ Measure agent response latency
+        *   ❌ Track lesson completion rate
+        *   ❌ Monitor on-topic vs off-topic ratio
+    *   ❌ **User Analytics Dashboard:**
+        *   ❌ Display conversation history with statistics
+        *   ❌ Show learning progress over time
+        *   ❌ Visualize time spent per lesson
+        *   ❌ Track phrases learned
+    *   ❌ **System Monitoring:**
+        *   ❌ Monitor WebSocket connection stability
+        *   ❌ Track agent performance metrics
+        *   ❌ Alert on high error rates
+        *   ❌ Log conversation issues for debugging
+
+## Task 27: Testing and Quality Assurance
+
+*   **Description:** Comprehensive testing of the agent-based conversation system.
+*   **Priority:** HIGH (Essential before production)
+*   **Status:** ❌ Not started
+*   **Dependencies:** All above tasks
+*   **Sub-tasks:**
+    *   ❌ **Functional Testing:**
+        *   ❌ Test conversation flow in all supported languages
+        *   ❌ Test interruption handling
+        *   ❌ Test off-topic redirection
+        *   ❌ Test lesson completion and progress tracking
+        *   ❌ Test error handling and recovery
+    *   ❌ **Language Testing:**
+        *   ❌ Test with native Hindi speakers
+        *   ❌ Test with native Spanish speakers
+        *   ❌ Test with native French speakers
+        *   ❌ Verify agent speaks correct language
+        *   ❌ Verify translations are accurate and natural
+    *   ❌ **Performance Testing:**
+        *   ❌ Measure and optimize response latency
+        *   ❌ Test with multiple simultaneous users
+        *   ❌ Monitor memory and CPU usage
+        *   ❌ Test WebSocket stability over long sessions
+    *   ❌ **User Acceptance Testing:**
+        *   ❌ Beta test with real users
+        *   ❌ Collect feedback on conversation naturalness
+        *   ❌ Gather feedback on learning effectiveness
+        *   ❌ Iterate based on user feedback
+
+## Task 28: Documentation and Deployment
+
+*   **Description:** Document the new architecture and deploy to production.
+*   **Priority:** HIGH (Required for launch)
+*   **Status:** ❌ Not started
+*   **Dependencies:** Task 27
+*   **Sub-tasks:**
+    *   ❌ **Architecture Documentation:**
+        *   ❌ Create architecture diagram for agent-based system
+        *   ❌ Document agent configuration process
+        *   ❌ Document knowledge base structure
+        *   ❌ Create API documentation for new endpoints
+    *   ❌ **User Documentation:**
+        *   ❌ Create user guide for conversation interface
+        *   ❌ Document how to start/end conversations
+        *   ❌ Explain interruption capability
+        *   ❌ Add troubleshooting guide
+    *   ❌ **Deployment:**
+        *   ❌ Set up production ElevenLabs account
+        *   ❌ Configure production database
+        *   ❌ Deploy to Vercel with environment variables
+        *   ❌ Set up monitoring and alerting
+        *   ❌ Create rollback plan
+    *   ❌ **Post-Launch:**
+        *   ❌ Monitor system performance
+        *   ❌ Track user engagement metrics
+        *   ❌ Collect user feedback
+        *   ❌ Plan iterations based on data
+
+---
+
+## Priority Summary for Agent Platform Implementation
+
+### Phase 1: Foundation (Weeks 1-2)
+- Task 17: Agent Infrastructure Setup
+- Task 18: Lesson-to-Knowledge-Base Conversion
+- Task 21: Dynamic System Prompt Generation
+
+### Phase 2: Core Conversation (Weeks 3-4)
+- Task 19: Frontend Agent Integration
+- Task 20: Conversation Session Management
+- Task 22: Lesson Greeting and Introduction
+
+### Phase 3: Content and Polish (Weeks 5-6)
+- Task 24: Extended Lesson Content Creation
+- Task 23: Conversation Flow Control
+- Task 25: Agent Voice Selection
+
+### Phase 4: Analytics and Testing (Weeks 7-8)
+- Task 26: Conversation Analytics
+- Task 27: Testing and QA
+- Task 28: Documentation and Deployment

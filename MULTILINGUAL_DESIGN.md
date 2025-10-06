@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Language Teacher application now fully supports multilingual conversations where the AI agent speaks **entirely in the user's native language** (e.g., Hindi) while teaching them a target language (e.g., English).
+The Language Teacher application uses **ElevenLabs Agents Platform** to conduct natural, conversational language lessons where the AI agent speaks **entirely in the user's native language** (e.g., Hindi) while teaching them a target language (e.g., English). The agent maintains context, handles interruptions gracefully, and adapts to the user's learning pace.
 
 ## Key Design Principle
 
@@ -71,28 +71,42 @@ This function retrieves the lesson step content in the user's conversation langu
 - `targetLanguage` (varchar): Language being taught
 - `instructionLanguage` (varchar): Default instruction language
 
-### 3. Conversation API Flow
+### 3. Agent-Based Conversation Flow
 
-**File:** `src/app/api/conversation/route.ts`
+**NEW APPROACH:** Using ElevenLabs Agents Platform for natural conversations
 
-1. **Fetch User Settings:**
+1. **Agent Creation (Per User):**
    ```typescript
-   const conversationLang = user.conversationLanguage || "en";
-   ```
-
-2. **Get Localized Content:**
-   ```typescript
-   const currentStep = getLessonStepContent(user.progress, conversationLang);
-   ```
-
-3. **Generate Audio in User's Language:**
-   ```typescript
-   const audioStream = await elevenlabs.textToSpeech.convert(voiceId, {
-     text: responseText,
-     model_id: "eleven_multilingual_v2",
-     language_code: conversationLang  // Critical: TTS in user's language
+   const agent = await elevenlabs.agents.create({
+     name: `Language Tutor for ${user.name}`,
+     system_prompt: generateSystemPrompt(conversationLang, targetLang, lessonContext),
+     language: conversationLang,  // Agent speaks in user's native language
+     voice_id: user.preferredVoiceId,
+     model_id: "eleven_turbo_v2_5",  // Fast, multilingual model
+     first_message: lessonGreeting[conversationLang]
    });
    ```
+
+2. **Knowledge Base Injection (Per Lesson):**
+   ```typescript
+   const knowledgeBase = await elevenlabs.agents.addKnowledgeBase(agent.id, {
+     name: `Lesson ${lessonId}`,
+     text: formatLessonAsKnowledgeBase(lesson, conversationLang)
+   });
+   ```
+
+3. **WebSocket Conversation (Frontend):**
+   ```typescript
+   const conversation = await elevenlabs.conversationalAI.startConversation({
+     agent_id: user.agentId,
+     // Audio streams continuously, no "push to talk"
+     // Agent automatically speaks in conversationLang
+     // Handles interruptions natively
+   });
+   ```
+
+4. **OLD FLOW (Deprecated):**
+   The previous API route approach with manual TTS/STT is being replaced by the Agents Platform.
 
 ### 4. HTTP Header Encoding Fix
 
@@ -140,17 +154,37 @@ Users can select:
 - **Multi-language Detection:** Automatically detects mixed-language input
 - **Supported:** User can speak in their native language mixed with target language phrases
 
+## Key Differences: Old vs New Approach
+
+| Aspect | Old Approach (TTS/STT) | New Approach (Agents Platform) |
+|--------|------------------------|--------------------------------|
+| **Interaction** | Push to talk button | Continuous conversation |
+| **Interruptions** | Not supported | Fully supported |
+| **Context** | Stateless, step-by-step | Context-aware, adaptive |
+| **Lesson Structure** | Strict turn-by-turn script | Flexible guidance document |
+| **Backend Logic** | Custom conversation management | ElevenLabs handles flow |
+| **User Experience** | Robotic, structured | Natural, conversational |
+| **Lesson Length** | Short (1-2 phrases) | Extended (5-10 phrases) |
+| **Flexibility** | Fixed script only | Agent can adapt to questions |
+
 ## Testing the Feature
 
+### Old Flow (Deprecated):
+1. Login → Settings → Select Languages → Start Lesson → Click "Start Recording"
+
+### New Flow (Agent-Based):
 1. **Login** to the application
 2. **Go to Settings** (`/settings`)
 3. **Select Languages:**
    - Conversation Language: Hindi
    - Target Language: English
-4. **Save Settings**
+4. **Save Settings** (triggers agent creation/update)
 5. **Start a Lesson** (`/lessons/1`)
-6. **Click "Start Recording"** and speak
-7. **Agent Response:** Will be in Hindi, teaching English
+6. **Click "Start Conversation"** - no push-to-talk needed
+7. **Agent Greets You** in Hindi, explaining lesson objectives
+8. **Speak naturally** - agent listens continuously
+9. **Interrupt anytime** - ask questions, request clarification
+10. **Agent Response:** Always in Hindi, teaching English phrases naturally
 
 ## Future Enhancements
 

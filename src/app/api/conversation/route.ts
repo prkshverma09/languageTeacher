@@ -1,10 +1,11 @@
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { NextResponse } from "next/server";
 import { db } from '@/db';
-import { users, lessonSteps } from '@/drizzle/schema';
+import { users } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { getLessonStepContent } from "@/lib/multilingual-data";
 
 export async function POST(req: Request) {
   try {
@@ -45,13 +46,21 @@ export async function POST(req: Request) {
     const transcribedText = sttResult.text || "";
     console.log("Transcribed text:", transcribedText);
 
-    // 2. Conversation Logic
-    const currentStep = await db.query.lessonSteps.findFirst({ where: eq(lessonSteps.id, user.progress) });
+    // 2. Conversation Logic - Get content in user's conversation language
+    const conversationLang = user.conversationLanguage || "en";
+    const currentStep = getLessonStepContent(user.progress, conversationLang);
     let responseText;
     let interactionResult: 'success' | 'failure';
 
     if (!currentStep) {
-      responseText = "You have completed all lessons. Congratulations!";
+      // Completion message in user's conversation language
+      const completionMessages: { [key: string]: string } = {
+        en: "You have completed all lessons. Congratulations!",
+        hi: "आपने सभी पाठ पूरे कर लिए हैं। बधाई हो!",
+        es: "¡Has completado todas las lecciones. Felicitaciones!",
+        fr: "Vous avez terminé toutes les leçons. Félicitations!",
+      };
+      responseText = completionMessages[conversationLang] || completionMessages['en'];
       interactionResult = 'success';
     } else {
       const isCorrect = transcribedText.trim().toLowerCase().includes(currentStep.expectedUserResponse?.toLowerCase() || '---');
@@ -61,7 +70,14 @@ export async function POST(req: Request) {
         if (currentStep.nextStepId) {
           await db.update(users).set({ progress: currentStep.nextStepId }).where(eq(users.id, userId));
         } else {
-          responseText += " You've finished this lesson!";
+          // Lesson completion message in user's conversation language
+          const lessonCompleteMessages: { [key: string]: string } = {
+            en: " You've finished this lesson!",
+            hi: " आपने यह पाठ पूरा कर लिया है!",
+            es: " ¡Has terminado esta lección!",
+            fr: " Vous avez terminé cette leçon!",
+          };
+          responseText += lessonCompleteMessages[conversationLang] || lessonCompleteMessages['en'];
           await db.update(users).set({ progress: -1 }).where(eq(users.id, userId));
         }
       } else {
@@ -90,9 +106,11 @@ export async function POST(req: Request) {
 
     const headers = new Headers();
     headers.set("Content-Type", "audio/mpeg");
-    headers.set("X-User-Transcription", transcribedText);
-    headers.set("X-Agent-Response", responseText);
+    // Encode non-ASCII characters as base64 to avoid HTTP header encoding errors
+    headers.set("X-User-Transcription", Buffer.from(transcribedText).toString('base64'));
+    headers.set("X-Agent-Response", Buffer.from(responseText).toString('base64'));
     headers.set("X-Interaction-Result", interactionResult);
+    headers.set("X-Encoding", "base64"); // Flag to indicate base64 encoding
 
     return new NextResponse(audioBuffer, { headers });
 
